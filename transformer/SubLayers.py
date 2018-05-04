@@ -41,7 +41,7 @@ class MultiHeadAttention(nn.Module):
 
         residual = q
 
-        mb_size, len_q, d_model = q.size()
+        mb_size, len_q, d_model = q.size() # number of sequences, sequence length, size of element (word embed) of sequence. 
         mb_size, len_k, d_model = k.size()
         mb_size, len_v, d_model = v.size()
 
@@ -62,7 +62,7 @@ class MultiHeadAttention(nn.Module):
         outputs = torch.cat(torch.split(outputs, mb_size, dim=0), dim=-1) 
 
         # project back to residual size
-        outputs = self.proj(outputs)
+        outputs = self.proj(outputs) # mb_size x len_q x d_model
         outputs = self.dropout(outputs)
 
         return self.layer_norm(outputs + residual), attns
@@ -73,7 +73,7 @@ class PositionwiseFeedForward(nn.Module):
     def __init__(self, d_hid, d_inner_hid, dropout=0.1):
         super(PositionwiseFeedForward, self).__init__()
         self.w_1 = nn.Conv1d(d_hid, d_inner_hid, 1) # position-wise
-        self.w_2 = nn.Conv1d(d_inner_hid, d_hid, 1) # position-wise
+        self.w_2 = nn.Conv1d(d_inner_hid, d_hid, 1) # position-wise 
         self.layer_norm = LayerNormalization(d_hid)
         self.dropout = nn.Dropout(dropout)
         self.relu = nn.ReLU()
