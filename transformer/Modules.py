@@ -88,7 +88,7 @@ class ScaledDotProductAttention(nn.Module):
                     'with Attention logit tensor shape ' \
                     '{}.'.format(attn_mask.size(), attn.size())
 
-            attn.data.masked_fill_(attn_mask, -float('inf'))
+            attn.data.masked_fill_(attn_mask, -float('inf')) # Fills elements of self tensor with value where mask is one.
 
         attn = self.softmax(attn)
         attn = self.dropout(attn)
