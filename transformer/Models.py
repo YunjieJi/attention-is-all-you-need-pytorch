@@ -14,19 +14,19 @@ def position_encoding_init(n_position, d_pos_vec):
     # keep dim 0 for padding token position encoding zero vector
     position_enc = np.array([
         [pos / np.power(10000, 2 * (j // 2) / d_pos_vec) for j in range(d_pos_vec)]
-        if pos != 0 else np.zeros(d_pos_vec) for pos in range(n_position)])
-
+        if pos != 0 else np.zeros(d_pos_vec) for pos in range(n_position)]) # pos is the position of words in a sentence.
+    # position_enc, len(n_position) x len(d_pos_vec)
     position_enc[1:, 0::2] = np.sin(position_enc[1:, 0::2]) # dim 2i
     position_enc[1:, 1::2] = np.cos(position_enc[1:, 1::2]) # dim 2i+1
     return torch.from_numpy(position_enc).type(torch.FloatTensor)
 
-def get_attn_padding_mask(seq_q, seq_k):
+def get_attn_padding_mask(seq_q, seq_k):  # contain the indices of words in the embeddings.
     ''' Indicate the padding-related part to mask '''
     assert seq_q.dim() == 2 and seq_k.dim() == 2
     mb_size, len_q = seq_q.size()
     mb_size, len_k = seq_k.size()
-    pad_attn_mask = seq_k.data.eq(Constants.PAD).unsqueeze(1)   # bx1xsk
-    pad_attn_mask = pad_attn_mask.expand(mb_size, len_q, len_k) # bxsqxsk
+    pad_attn_mask = seq_k.data.eq(Constants.PAD).unsqueeze(1)   # bx1xsk # eq: element-wise equality.
+    pad_attn_mask = pad_attn_mask.expand(mb_size, len_q, len_k) # bxsqxsk # expand to a tensor of size mb_size x len_q x lne_k.
     return pad_attn_mask
 
 def get_attn_subsequent_mask(seq):
@@ -48,14 +48,14 @@ class Encoder(nn.Module):
 
         super(Encoder, self).__init__()
 
-        n_position = n_max_seq + 1
+        n_position = n_max_seq + 1 # additional size of 1 for padding.
         self.n_max_seq = n_max_seq
         self.d_model = d_model
 
-        self.position_enc = nn.Embedding(n_position, d_word_vec, padding_idx=Constants.PAD)
-        self.position_enc.weight.data = position_encoding_init(n_position, d_word_vec)
+        self.position_enc = nn.Embedding(n_position, d_word_vec, padding_idx=Constants.PAD) # give a zero vector at the padding_idx
+        self.position_enc.weight.data = position_encoding_init(n_position, d_word_vec) 
 
-        self.src_word_emb = nn.Embedding(n_src_vocab, d_word_vec, padding_idx=Constants.PAD)
+        self.src_word_emb = nn.Embedding(n_src_vocab, d_word_vec, padding_idx=Constants.PAD) # usage of keeping dim 0 a zero vector? 
 
         self.layer_stack = nn.ModuleList([
             EncoderLayer(d_model, d_inner_hid, n_head, d_k, d_v, dropout=dropout)
@@ -63,9 +63,10 @@ class Encoder(nn.Module):
 
     def forward(self, src_seq, src_pos, return_attns=False):
         # Word embedding look up
-        enc_input = self.src_word_emb(src_seq)
+        enc_input = self.src_word_emb(src_seq) # Variable of size len(src_seq) x d_word_vec.
 
         # Position Encoding addition
+        # For position 0, returns zero vector.
         enc_input += self.position_enc(src_pos)
         if return_attns:
             enc_slf_attns = []
@@ -116,7 +117,7 @@ class Decoder(nn.Module):
         # Decode
         dec_slf_attn_pad_mask = get_attn_padding_mask(tgt_seq, tgt_seq)
         dec_slf_attn_sub_mask = get_attn_subsequent_mask(tgt_seq)
-        dec_slf_attn_mask = torch.gt(dec_slf_attn_pad_mask + dec_slf_attn_sub_mask, 0)
+        dec_slf_attn_mask = torch.gt(dec_slf_attn_pad_mask + dec_slf_attn_sub_mask, 0) # computes 1th argu > 2th argu  element-wise.
 
         dec_enc_attn_pad_mask = get_attn_padding_mask(tgt_seq, src_seq)
 
