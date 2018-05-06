@@ -178,6 +178,8 @@ class Transformer(nn.Module):
 
     def get_trainable_parameters(self):
         ''' Avoid updating the position encoding '''
+        # map(aFunction, aSequence), apply the function to each element of the sequence.
+        # id: returns a unique and constant an integer for an object during its lifetime.
         enc_freezed_param_ids = set(map(id, self.encoder.position_enc.parameters()))
         dec_freezed_param_ids = set(map(id, self.decoder.position_enc.parameters()))
         freezed_param_ids = enc_freezed_param_ids | dec_freezed_param_ids
