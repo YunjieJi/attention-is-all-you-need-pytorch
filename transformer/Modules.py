@@ -50,7 +50,8 @@ class LayerNormalization(nn.Module):
         mu = torch.mean(z, keepdim=True, dim=-1)
         sigma = torch.std(z, keepdim=True, dim=-1)
         ln_out = (z - mu.expand_as(z)) / (sigma.expand_as(z) + self.eps)
-        ln_out = ln_out * self.a_2.expand_as(ln_out) + self.b_2.expand_as(ln_out) # a_2 b_2 gonna be tunning? 
+        # A practical trick for normalization.
+        ln_out = ln_out * self.a_2.expand_as(ln_out) + self.b_2.expand_as(ln_out) # a_2 b_2 gonna be tunning.  
 
         return ln_out
 
