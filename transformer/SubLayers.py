@@ -42,7 +42,7 @@ class MultiHeadAttention(nn.Module):
         residual = q
 
         mb_size, len_q, d_model = q.size() # number of sequences, sequence length, size of element (word embed) of sequence. 
-        mb_size, len_k, d_model = k.size()
+        mb_size, len_k, d_model = k.size() # imply that the dim of each word of q,k,v is the same.
         mb_size, len_v, d_model = v.size()
 
         # treat as a (n_head) size batch
